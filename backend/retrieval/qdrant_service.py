@@ -25,10 +25,11 @@ class QdrantService:
         self.dimension = settings.embedding_dimension
 
     async def ensure_collection(self):
-        """Create collection if it doesn't exist."""
-        collections = await self.client.get_collections()
-        names = [c.name for c in collections.collections]
-        if self.collection not in names:
+    
+     collections = await self.client.get_collections()
+     names = [c.name for c in collections.collections]
+     if self.collection not in names:
+        try:
             await self.client.create_collection(
                 collection_name=self.collection,
                 vectors_config=VectorParams(
@@ -37,6 +38,11 @@ class QdrantService:
                 ),
             )
             logger.info("Qdrant collection created", collection=self.collection)
+        except Exception as e:
+            if "already exists" in str(e).lower() or "409" in str(e):
+                logger.info("Qdrant collection already created by another worker", collection=self.collection)
+            else:
+                raise
 
     async def upsert_points(self, points: List[Dict[str, Any]]):
         """Upsert a batch of points into Qdrant."""
