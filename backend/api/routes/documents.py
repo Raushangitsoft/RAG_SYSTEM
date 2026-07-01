@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
+from sqlalchemy.orm import selectinload
 
 from models.database import Document, Chunk, get_db
 from services.storage_service import get_storage_service
@@ -156,7 +157,9 @@ async def get_document(doc_id: str, db: AsyncSession = Depends(get_db)):
 async def delete_document(doc_id: str, db: AsyncSession = Depends(get_db)):
     """Delete a document and remove it from all indexes."""
     result = await db.execute(
-        select(Document).where(Document.id == uuid.UUID(doc_id))
+        select(Document)
+        .options(selectinload(Document.chunks))
+        .where(Document.id == uuid.UUID(doc_id))
     )
     document = result.scalar_one_or_none()
     if not document:
@@ -189,7 +192,9 @@ async def reindex_document(
 ):
     """Trigger re-indexing of an existing document."""
     result = await db.execute(
-        select(Document).where(Document.id == uuid.UUID(doc_id))
+        select(Document)
+        .options(selectinload(Document.chunks))
+        .where(Document.id == uuid.UUID(doc_id))
     )
     document = result.scalar_one_or_none()
     if not document:

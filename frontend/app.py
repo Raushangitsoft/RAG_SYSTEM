@@ -162,7 +162,7 @@ if "💬 Ask Documents" in page:
                 dept = department_filter if department_filter != "all" else None
                 result, error = api_post(
                     "/api/v1/query/",
-                    timeout=180,
+                    timeout=600,
                     json={"query": query, "department": dept},
                 )
 

@@ -25,13 +25,13 @@ class EmbeddingService:
 
     def load_model(self):
         if self._model is None:
-            logger.info("Loading embedding model", model=settings.embedding_model)
-            self._model = FlagModel(
-                settings.embedding_model,
-                use_fp16=False,  # CPU - use fp32
-                cache_dir=f"{settings.models_base_path}/embeddings",
-            )
-            logger.info("Embedding model loaded successfully")
+          logger.info("Loading embedding model", model=settings.embedding_model)
+          self._model = FlagModel(
+            settings.embedding_model,
+            use_fp16=False,  # CPU - use fp32
+            
+        )
+        logger.info("Embedding model loaded successfully")
 
     def get_model(self) -> FlagModel:
         if self._model is None:

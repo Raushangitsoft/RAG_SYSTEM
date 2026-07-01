@@ -28,7 +28,7 @@ class RerankerService:
             self._model = FlagReranker(
                 settings.reranker_model,
                 use_fp16=False,  # CPU
-                cache_dir=f"{settings.models_base_path}/reranker",
+                
             )
             logger.info("Reranker model loaded successfully")
 
