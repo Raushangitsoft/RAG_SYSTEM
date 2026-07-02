@@ -1,5 +1,5 @@
 import time
-from typing import TypedDict, List, Dict, Any, Optional
+from typing import TypedDict, List, Dict, Any, Optional, Tuple
 
 import structlog
 import tiktoken
@@ -110,18 +110,27 @@ async def rerank(state: RAGState) -> RAGState:
 
 
 async def build_context(state: RAGState) -> RAGState:
-    """Build context string from reranked chunks within token budget."""
+    """
+    Build context string from reranked chunks within token budget.
+
+    Chunks are grouped by (document_name, section_heading, page_number) so that
+    fragments belonging to the same section/project/entry are merged together
+    under a single, clearly labeled block. This prevents the LLM from confusing
+    similar-looking facts that belong to different sections (e.g. two different
+    projects that each list their own "Technologies used" line).
+    """
     chunks = state["reranked"]
     if not chunks:
         state["context"] = ""
         state["sources"] = []
         return state
 
-    context_parts = []
     sources = []
     total_tokens = count_tokens(SYSTEM_PROMPT) + count_tokens(state["query"]) + 200
-
     seen_content = set()
+
+    grouped: Dict[Tuple[str, str, Any], List[str]] = {}
+    order: List[Tuple[str, str, Any]] = []
 
     for chunk in chunks:
         content = chunk["content"].strip()
@@ -135,18 +144,30 @@ async def build_context(state: RAGState) -> RAGState:
         chunk_tokens = count_tokens(content)
         if total_tokens + chunk_tokens > MAX_CONTEXT_TOKENS:
             break
+        total_tokens += chunk_tokens
 
-        context_parts.append(
-            f"[Source: {chunk['document_name']}, Page {chunk['page_number']}]\n{content}"
-        )
+        section = chunk.get("section_heading") or "N/A"
+        key = (chunk["document_name"], section, chunk["page_number"])
+        if key not in grouped:
+            grouped[key] = []
+            order.append(key)
+        grouped[key].append(content)
+
         sources.append({
             "document_name": chunk["document_name"],
             "document_id": chunk.get("document_id", ""),
             "page_number": chunk["page_number"],
-            "section_heading": chunk.get("section_heading", ""),
+            "section_heading": section,
             "score": chunk.get("reranker_score", chunk.get("rrf_score", 0)),
         })
-        total_tokens += chunk_tokens
+
+    context_parts = []
+    for key in order:
+        doc_name, section, page = key
+        merged_content = "\n".join(grouped[key])
+        context_parts.append(
+            f"[Source: {doc_name}, Section: {section}, Page {page}]\n{merged_content}"
+        )
 
     state["context"] = "\n\n---\n\n".join(context_parts)
     state["sources"] = sources

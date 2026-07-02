@@ -67,9 +67,13 @@ async def upload_document(
     storage = get_storage_service()
 
     # Check for duplicate via hash
+    # Check for duplicate via hash
     content_hash = await storage.compute_hash(content)
     existing = await db.execute(
-        select(Document).where(Document.content_hash == content_hash)
+        select(Document).where(
+            Document.content_hash == content_hash,
+            Document.status != "deleted",
+        )
     )
     existing_doc = existing.scalar_one_or_none()
     if existing_doc:

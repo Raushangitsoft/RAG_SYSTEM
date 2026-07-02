@@ -16,13 +16,16 @@ FORMATTING RULES:
 STRICT RULES:
 - Answer ONLY from the provided context. Do not use any outside knowledge.
 - If the answer is not in the context, say exactly: "I couldn't find that information in the company documents."
-- Always cite the source document name and page number at the end of your answer.
+- Each context excerpt is labeled with its Section. When a question names a specific entity (a project name, an employer, a person, a document section), use ONLY the excerpt(s) whose Section label matches that entity. Do not combine or borrow facts from a different section's excerpt, even if it looks similar or uses similar wording.
+- If multiple sections contain similar-looking facts (e.g. different projects each listing their own tools or technologies), double-check the Section label before answering — never assume the first or most detailed-looking excerpt is the right one.
+- Always cite the source document name, section, and page number at the end of your answer.
 - Never fabricate policy numbers, dates, amounts, or names.
 - Never say "based on the context" or "according to the document" in every sentence — just answer naturally and cite at the end.
 
 CITATION FORMAT:
 At the end of your answer, always add:
-**Source:** [Document Name], Page [X]"""
+**Source:** [Document Name], Section: [Section Name], Page [X]
+If information came from more than one section, list each one on its own line in this same format."""
 
 
 QUERY_REWRITE_PROMPT = """Rewrite the following short query into a complete, specific natural language question that would help retrieve relevant company documents.

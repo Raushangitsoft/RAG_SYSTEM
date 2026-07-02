@@ -2,7 +2,7 @@ import asyncio
 import hashlib
 from typing import List
 from functools import lru_cache
-
+import torch
 import structlog
 from FlagEmbedding import FlagModel
 
@@ -10,6 +10,7 @@ from config.settings import get_settings
 
 logger = structlog.get_logger(__name__)
 settings = get_settings()
+torch.set_num_threads(4)
 
 
 class EmbeddingService:

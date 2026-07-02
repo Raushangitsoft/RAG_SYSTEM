@@ -3,12 +3,16 @@ from typing import List, Dict, Any
 from functools import lru_cache
 
 import structlog
+import torch
 from FlagEmbedding import FlagReranker
 
 from config.settings import get_settings
 
 logger = structlog.get_logger(__name__)
 settings = get_settings()
+
+# Use all available CPU cores for inference instead of PyTorch's default (which was capped at 2)
+torch.set_num_threads(4)
 
 
 class RerankerService:
